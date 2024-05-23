@@ -540,13 +540,22 @@ std::string Camera::to_string(){
     std::stringstream buffer;
     Eigen::Quaternionf q(m_model_matrix.linear());
     buffer << m_model_matrix.translation().transpose() << " " << q.vec().transpose() << " " << q.w() << " " << m_lookat.transpose() << " " << m_fov << " " << m_near << " " << m_far;
+    if ( m_use_ortho_projection )
+        buffer << " " << m_ortho_scale;
     return buffer.str();
 }
 
 void Camera::from_string(const std::string pose){
     std::vector<std::string> tokens = split(pose, " ");
 
-    CHECK(tokens.size()==13) << "We should have 13 components to the pose. The components  are: tx ty tz qx qy qz qw lx ly lz fov znear zfar. We have nr of components: " << tokens.size();
+    CHECK((tokens.size()==13) || (tokens.size()==14) ) << "We should have 13 components to the pose. The components  are: tx ty tz qx qy qz qw lx ly lz fov znear zfar. We have nr of components: " << tokens.size();
+
+    if ( tokens.size() == 14 ) // should use ortho projection!
+    {
+        //CHECK(tokens.size()==13) << "We should have 13 components to the pose. The components  are: tx ty tz qx qy qz qw lx ly lz fov znear zfar. We have nr of components: " << tokens.size();
+        m_ortho_scale = stof(tokens[13]);
+        m_use_ortho_projection = true;
+    }
 
     //tx ty tz
     m_model_matrix.translation().x() = stof(tokens[0]);
