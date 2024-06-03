@@ -253,6 +253,7 @@ public:
     void preallocate_L_pred(size_t max_nr_verts);
     void preallocate_L_gt(size_t max_nr_verts);
     void preallocate_I(size_t max_nr_verts);
+    void preallocate_T(size_t max_nr_verts);
 
 
 
@@ -368,6 +369,7 @@ public:
     Eigen::MatrixXi L_pred; //predicted labels for each point, useful for semantic segmentation
     Eigen::MatrixXi L_gt; //ground truth labels for each point, useful for semantic segmentation
     Eigen::MatrixXd I; //intensity value of each point in the cloud. Useful for laser scanner
+    Eigen::MatrixXi T; //time value of each point since start of the cloud. Useful for laser scanner
     Eigen::MatrixXi VTI; //Vertex texture coordinate indices which is the coordinate that the vertices has towards the UV. check https://en.wikipedia.org/wiki/Wavefront_.obj_file
     Eigen::MatrixXi VNI; //Vertex normal indices which is the coordinate that the vertices has towards the NV. check https://en.wikipedia.org/wiki/Wavefront_.obj_file
     DataBlob<double> V_blob;

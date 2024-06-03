@@ -105,6 +105,7 @@ Mesh Mesh::clone(){
     cloned.L_pred=L_pred;
     cloned.L_gt=L_gt;
     cloned.I=I;
+    cloned.T=T;
     cloned.m_seg_label_pred=m_seg_label_pred;
     cloned.m_seg_label_gt=m_seg_label_gt;
     // cloned.m_rgb_tex_cpu=m_rgb_tex_cpu.clone();
@@ -171,7 +172,8 @@ void Mesh::add(Mesh& new_mesh) {
         L_gt_new << L_gt, new_mesh.L_gt;
         Eigen::MatrixXd I_new(I.rows() + new_mesh.I.rows(), 1);
         I_new << I, new_mesh.I;
-
+        Eigen::MatrixXi T_new(T.rows() + new_mesh.T.rows(), 1);
+        T_new << T, new_mesh.T;
 
         // V = V_new;
         F = F_new;
@@ -187,6 +189,7 @@ void Mesh::add(Mesh& new_mesh) {
         L_pred=L_pred_new;
         L_gt=L_gt_new;
         I=I_new;
+        T=T_new;
 
 
         // m_is_dirty=true;
@@ -223,6 +226,8 @@ void Mesh::add(Mesh& new_mesh) {
         L_gt_new << L_gt, new_mesh.L_gt;
         Eigen::MatrixXd I_new(I.rows() + new_mesh.I.rows(), 1);
         I_new << I, new_mesh.I;
+        Eigen::MatrixXi T_new(T.rows() + new_mesh.T.rows(), 1);
+        T_new << T, new_mesh.T;
 
 
         V = V_new;
@@ -239,6 +244,7 @@ void Mesh::add(Mesh& new_mesh) {
         L_pred=L_pred_new;
         L_gt=L_gt_new;
         I=I_new;
+        T=T_new;
 
 
         m_is_dirty=true;
@@ -270,6 +276,7 @@ void Mesh::add(const std::vector<std::shared_ptr<Mesh>>&  meshes){
     int nr_L_pred_acumulated=L_pred.rows();
     int nr_L_gt_acumulated=L_gt.rows();
     int nr_I_acumulated=I.rows();
+    int nr_T_acumulated=T.rows();
     for(size_t i=0; i<meshes.size(); i++){
         nr_V_acumulated+=meshes[i]->V.rows();
         // cumulative_nr_verts.push_back(nr_V_acumulated);
@@ -285,6 +292,7 @@ void Mesh::add(const std::vector<std::shared_ptr<Mesh>>&  meshes){
         nr_L_pred_acumulated+=meshes[i]->L_pred.rows();
         nr_L_gt_acumulated+=meshes[i]->L_gt.rows();
         nr_I_acumulated+=meshes[i]->I.rows();
+        nr_T_acumulated+=meshes[i]->T.rows();
     }
 
     //make the new ones
@@ -301,6 +309,7 @@ void Mesh::add(const std::vector<std::shared_ptr<Mesh>>&  meshes){
     Eigen::MatrixXi L_pred_new(nr_L_pred_acumulated, 1);
     Eigen::MatrixXi L_gt_new(nr_L_gt_acumulated, 1);
     Eigen::MatrixXd I_new(nr_I_acumulated, 1);
+    Eigen::MatrixXi T_new(nr_T_acumulated, 1);
 
 
 
@@ -317,6 +326,7 @@ void Mesh::add(const std::vector<std::shared_ptr<Mesh>>&  meshes){
     int nr_L_pred_added=0;
     int nr_L_gt_added=0;
     int nr_I_added=0;
+    int nr_T_added=0;
 
 
     //put the current matrices into the new ones
@@ -370,6 +380,10 @@ void Mesh::add(const std::vector<std::shared_ptr<Mesh>>&  meshes){
     int nr_additional_I= I.rows();
     I_new.block(0,0, nr_additional_I,1) = I;
     nr_I_added+=nr_additional_I;
+    //T
+    int nr_additional_T= T.rows();
+    T_new.block(0,0, nr_additional_T,1) = T;
+    nr_T_added+=nr_additional_T;
 
 
 
@@ -446,6 +460,11 @@ void Mesh::add(const std::vector<std::shared_ptr<Mesh>>&  meshes){
         int I_block_row= nr_I_added;
         I_new.block(I_block_row,0, nr_additional_I,1) = meshes[i]->I;
         nr_I_added+=nr_additional_I;
+        //T
+        int nr_additional_T= meshes[i]->T.rows();
+        int T_block_row= nr_T_added;
+        T_new.block(T_block_row,0, nr_additional_T,1) = meshes[i]->T;
+        nr_T_added+=nr_additional_T;
 
 
 
@@ -465,7 +484,7 @@ void Mesh::add(const std::vector<std::shared_ptr<Mesh>>&  meshes){
     L_pred=L_pred_new;
     L_gt=L_gt_new;
     I=I_new;
-
+    T=T_new;
 
     m_is_dirty=true;
     m_is_shadowmap_dirty=true;
@@ -529,6 +548,7 @@ void Mesh::clear() {
     L_pred.resize(0,0);
     L_gt.resize(0,0);
     I.resize(0,0);
+    T.resize(0,0);
 
     m_min_max_y.setZero();
     m_min_max_y_for_plotting.setZero();
@@ -561,6 +581,7 @@ void Mesh::set_all_matrices_to_zero(){
     L_pred.setZero();
     L_gt.setZero();
     I.setZero();
+    T.setZero();
 }
 
 void Mesh::preallocate_V(size_t max_nr_verts){
@@ -3185,6 +3206,7 @@ std::ostream& operator<<(std::ostream& os, const Mesh& m)
     m.L_pred.size()?  os << "\t L_pred has size: " << m.L_pred.rows() << " x " << m.L_pred.cols() << "\n"   :   os << "\t L_pred is empty \n";
     m.L_gt.size()?  os << "\t L_gt has size: " << m.L_gt.rows() << " x " << m.L_gt.cols() << "\n"   :   os << "\t L_gt is empty \n";
     m.I.size()?  os << "\t I has size: " << m.I.rows() << " x " << m.I.cols() << "\n"   :   os << "\t I is empty \n";
+    m.T.size()?  os << "\t T has size: " << m.T.rows() << " x " << m.T.cols() << "\n"   :   os << "\t T is empty \n";
     m.NF.size()?  os << "\t NF has size: " << m.NF.rows() << " x " << m.NF.cols() << "\n"   :   os << "\t NF is empty \n";
     m.NV.size()?  os << "\t NV has size: " << m.NV.rows() << " x " << m.NV.cols() << "\n"   :   os << "\t NV is empty \n";
 
